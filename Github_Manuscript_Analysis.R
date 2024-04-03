@@ -1,4 +1,4 @@
-setwd("/Users/macbook/Documents/Stella/Human_AIG_vs_Hp")
+setwd("/path/to/files")
 options(future.globals.maxSize = 100000 * 1024^2)
 library(dplyr)
 library(Seurat)
@@ -10,10 +10,10 @@ library(metap)
 library(gridExtra)
 
 #Identifying Clusters by Gene Expression
-combined<-readRDS('human_hp_aig_v5.rds')
+combined<-readRDS('combined.rds')
 All_markers<-FindAllMarkers(combined, only.pos=TRUE, min.pct=0.25, logfc.threshold = 1)
-write.csv(All_markers, file="./CSV/findallmarkers_v5.csv")
-write.csv(table(combined@meta.data$seurat_clusters,combined@meta.data$condition), file="./CSV/number_by_path_v5.csv")
+write.csv(All_markers, file="filename.csv")
+write.csv(table(combined@meta.data$seurat_clusters,combined@meta.data$condition), file="filename.csv")
 combined<-RenameIdents(combined,'0'="B",'1'="B",'2'="B",'3'="Neck",'4'="T",
                        '5'="B",'6'="Pit",'7'="T",'8'="SPEM",'9'="Pit",'10'="Cancer",
                        '11'="Prolif Epi",'12'="Endo",'13'="B",'14'="Fibro",'15'="Neuro",
@@ -46,7 +46,7 @@ quantile(combined@meta.data[["meta_sig_score1"]], probs = c(0.9, 0.95))
 # 90% = 0.2394622 
 Meta<-subset(combined, subset = meta_sig_score1 > 0.2394622 & PTPRC <=0 & CD79A<=0 & CD3E<=0 & EPCAM>0)
 DimPlot(object = Meta, reduction = "umap",label=TRUE, pt.size = 1, group.by = "epi_clusters", shuffle=FALSE) + NoLegend()
-write.csv(table(Meta@meta.data$epi_clusters,Meta@meta.data$condition), file="./CSV/number_by_path_meta_subset.csv")
+write.csv(table(Meta@meta.data$epi_clusters,Meta@meta.data$condition), file="filename.csv")
 
 
 #proportion Metaplasia of total
@@ -72,15 +72,15 @@ Meta<-FindClusters(Meta, resolution = 0.4)
 Meta<-RunUMAP(Meta, dims=1:30, reduction = "integrated.rpca")
 DimPlot(object = Meta, reduction = "umap",label=TRUE, pt.size = 1)
 DimPlot(object = Meta, reduction = "umap",label=TRUE, pt.size = 1, split.by="condition") + NoLegend()
-saveRDS(Meta, file="Meta_aig+hp_v5_int.rds")
+saveRDS(Meta, file="meta_object.rds")
 
 
 #DEG and proportions of metaplasia subtypes
-Meta<-readRDS('Meta_aig+hp_v5_int.rds')
+Meta<-readRDS('meta_object.rds')
 Meta$celltype<- Idents(Meta)
-write.csv(table(Meta@meta.data$condition,Meta@meta.data$seurat_clusters), file="./CSV/number_meta_by_path_int.csv")
+write.csv(table(Meta@meta.data$condition,Meta@meta.data$seurat_clusters), file="filename.csv")
 All_markers<-FindAllMarkers(Meta, only.pos=TRUE, min.pct=0.5, logfc.threshold = 1)
-write.csv(All_markers, file="./CSV/findallmarkers_meta_int.csv")
+write.csv(All_markers, file="filename.csv")
 
 
 #Heatmap
@@ -122,7 +122,7 @@ imm_entero_list <- list(Imm_entero)
 ecl<-homo_sets$BUSSLINGER_GASTRIC_OXYNTIC_ENTEROCHROMAFFIN_LIKE_CELLS
 ecl_list <- list(ecl)
 
-combined<-readRDS('human_hp_aig_v5.rds')
+combined<-readRDS('combined.rds')
 combined<-RenameIdents(combined,'0'="B",'1'="B",'2'="B",'3'="Neck",'4'="T",
                        '5'="B",'6'="Pit",'7'="T",'8'="SPEM",'9'="Pit",'10'="Cancer",
                        '11'="Prolif",'12'="Endo",'13'="B",'14'="Fibro",'15'="Neuro",
@@ -134,7 +134,7 @@ combined$epi_clusters<-Idents(combined)
 Prolif_markers<-FindMarkers(combined, ident.1="Prolif", only.pos=TRUE, min.pct=0.5, logfc.threshold = 1)
 prolif_list<-list(rownames(Prolif_markers))
 
-Meta<-readRDS('Meta_aig+hp_v5_int.rds')
+Meta<-readRDS('meta_object.rds')
 Meta$celltype<- Idents(Meta)
 
 Meta <- AddModuleScore(object = Meta, features = chief_list, name = "chief_list_score")
@@ -161,7 +161,7 @@ CombinePlots(plots=c(prolif_plot,chief_plot,imm_plot,ecl_plot,gob_plot), ncol=5,
 
 
 #cancer sig on meta
-meta<-readRDS('Meta_aig+hp_v5_int.rds')
+meta<-readRDS('meta_object.rds')
 DefaultAssay(meta)<-"RNA"
 cancer_sig <- list(c("EPCAM","TACSTD2","MMP7","CEACAM5","REG4","CLDN7","S100A6","APOA1","MUC13","CDH17",
                      "CLDN3","CDX1","OLFM4","ANPEP","ONECUT2","EFNA2","ANXA13","GUCY2C","DMBT1","HKDC1"))
@@ -189,22 +189,22 @@ grid.arrange(p2,p1, ncol = 2)
 
 
 #Cell type projection mapping
-meta<-readRDS('Meta_aig+hp_v5_int.rds')
+meta<-readRDS('meta_object.rds')
 DefaultAssay(meta)<-"RNA"
 
-combined<-readRDS('/Users/macbook/Documents/Stella/Human_Hp_Meta/pos_pat/human_hp_adj_canc.rds')
-DefaultAssay(combined)<-"RNA"
-Idents(combined)<-"seurat_clusters"
-combined<-RenameIdents(combined,'0'="B",'1'="B",'2'="B",'3'="T",'4'="B",
+tumor<-readRDS('Hp_tumor_biopsies.rds')
+DefaultAssay(tumor)<-"RNA"
+Idents(tumor)<-"seurat_clusters"
+tumor<-RenameIdents(tumor,'0'="B",'1'="B",'2'="B",'3'="T",'4'="B",
                        '5'="Fibro",'6'="Meta/Neck",'7'="T",'8'="Endo",'9'="Cancer",'10'="T",
                        '11'="B",'12'="Pit",'13'="Meta",'14'="Mast",'15'="SM",'16'="Mast",
                        '17'="Pit",'18'="Cancer",'19'="SM",'20'="Prolif",'21'="B",'22'="Neuro",
                        '23'="Pit",'24'="B",'25'="Mac",'26'="Mast",'27'="Stromal",'28'="B",'29'="B",
                        '30'="B",'31'="T",'32'="Chief/Parietal")
-combined$epi_clusters<-Idents(combined)
-epi<-subset(combined, idents = c("Pit","Meta","Meta/Neck","Chief/Parietal","Cancer","Neuro","Fibro","Endo","Prolif","SM"))
+tumor$epi_clusters<-Idents(tumor)
+epi<-subset(tumor, idents = c("Pit","Meta","Meta/Neck","Chief/Parietal","Cancer","Neuro","Fibro","Endo","Prolif","SM"))
 
-VlnPlot(combined, features="ANPEP", group.by = "epi_clusters", pt.size = 0,combine=FALSE)
+VlnPlot(tumor, features="ANPEP", group.by = "epi_clusters", pt.size = 0,combine=FALSE)
 VlnPlot(meta, features="ANPEP", group.by = "seurat_clusters", split.by="condition", cols=c("red","blue"), pt.size = 0.1,combine=FALSE)
 
 anchors <- FindTransferAnchors(reference = epi, query = meta,
